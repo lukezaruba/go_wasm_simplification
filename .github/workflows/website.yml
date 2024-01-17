@@ -31,6 +31,10 @@ jobs:
         run: GOARCH=wasm GOOS=js go build -o simplify.wasm
       - name: Copy WASM EXEC JS
         run: echo "${{env.GOROOT}}/misc/wasm" >> $GITHUB_PATH
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
