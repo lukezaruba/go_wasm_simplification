@@ -30,7 +30,9 @@
         color: #818181;
       }
 
-      .sidenav button {
+      .sidenav button,
+      label,
+      p {
         color: #818181;
       }
 
@@ -80,6 +82,11 @@
     <div class="sidenav">
       <h2>Line Simplification</h2>
       <input type="file" id="fileInput" accept=".geojson" />
+      <br />
+      <br />
+      <br />
+      <p>Threshold:</p>
+      <input type="number" id="slider" step="0.001" value="0.001" />
       <br />
       <br />
       <br />

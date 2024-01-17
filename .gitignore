@@ -1,3 +1,4 @@
 .vscode
 simplify.wasm
 wasm_exec.js
+.DS_Store

@@ -35,6 +35,8 @@ func ProcessGeoJSON(this js.Value, args []js.Value) any {
 	data := make([]byte, numBytes)
 	js.CopyBytesToGo(data, args[0])
 
+	thresholdValue := args[1].Float()
+
 	fc, err := geojson.UnmarshalFeatureCollection(data)
 	if err != nil {
 		return returnFromError(err)
@@ -44,8 +46,7 @@ func ProcessGeoJSON(this js.Value, args []js.Value) any {
 
 	for _, feature := range fc.Features {
 		lineString := feature.Geometry.(orb.LineString)
-		// TODO: Add in second arg for threshold
-		simplifiedLine := simplify.DouglasPeucker(0.001).Simplify(lineString.Clone())
+		simplifiedLine := simplify.DouglasPeucker(thresholdValue).Simplify(lineString.Clone())
 		simplifiedFeature := geojson.NewFeature(simplifiedLine)
 		simplifiedFeature.Properties = feature.Properties
 		simplifiedFC.Append(simplifiedFeature)

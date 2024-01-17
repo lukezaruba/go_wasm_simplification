@@ -8,6 +8,7 @@ WebAssembly.instantiateStreaming(fetch("simplify.wasm"), go.importObject).then(
 
 function processFile() {
   const fileInput = document.getElementById("fileInput");
+  const thresholdSlider = parseFloat(document.getElementById("slider").value);
   const downloadLink = document.getElementById("downloadLink");
 
   const file = fileInput.files[0];
@@ -37,7 +38,7 @@ function processFile() {
     );
 
     const data = new Uint8Array(e.target.result);
-    const result = ProcessGeoJSON(data);
+    const result = ProcessGeoJSON(data, thresholdSlider);
     if (result.error) {
       alert(`Error processing GeoJSON: ${result.error}`);
     } else {
