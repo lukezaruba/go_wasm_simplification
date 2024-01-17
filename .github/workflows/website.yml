@@ -30,7 +30,7 @@ jobs:
       - name: Build WASM
         run: GOARCH=wasm GOOS=js go build -o simplify.wasm
       - name: Copy WASM EXEC JS
-        run: cp "$$(go env GOROOT)/misc/wasm/wasm_exec.js" .
+        run: echo "${{env.GOROOT}}/misc/wasm" >> $GITHUB_PATH
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
