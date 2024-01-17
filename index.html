@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        font-family: "Lato", sans-serif;
+      }
+
+      .sidenav {
+        height: 100%;
+        width: 300px;
+        position: fixed;
+        z-index: 1;
+        top: 0;
+        left: 0;
+        background-color: #111;
+        overflow-x: hidden;
+        padding-top: 20px;
+        text-align: center;
+      }
+
+      .sidenav input {
+        text-decoration: none;
+        color: #818181;
+      }
+
+      .sidenav button {
+        color: #818181;
+      }
+
+      .sidenav button:hover {
+        color: #0000ff;
+      }
+
+      .sidenav h2 {
+        color: #fff;
+      }
+
+      .main {
+        height: 100%;
+        margin-left: 300px; /* Same as the width of the sidenav */
+        font-size: 28px; /* Increased text to enable scrolling */
+        padding: 0px 10px;
+        overflow-x: hidden;
+      }
+
+      #map {
+        width: 100%;
+        height: 99%;
+      }
+
+      @media screen and (max-height: 450px) {
+        .sidenav {
+          padding-top: 15px;
+        }
+        .sidenav a {
+          font-size: 18px;
+        }
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+  </head>
+  <body>
+    <div class="sidenav">
+      <h2>Line Simplification</h2>
+      <input type="file" id="fileInput" accept=".geojson" />
+      <br />
+      <br />
+      <br />
+      <button onclick="processFile()">Process GeoJSON</button>
+      <br />
+      <br />
+      <br />
+      <a id="downloadLink" style="display: none">Download Simplified GeoJSON</a>
+    </div>
+
+    <div class="main">
+      <div id="map"></div>
+    </div>
+    <script>
+      const map = L.map("map").setView([0.0, 0.0], 2);
+
+      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution:
+          '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      }).addTo(map);
+
+      var layerControl = L.control
+        .layers([], [], { collapsed: false })
+        .addTo(map);
+    </script>
+    <script src="wasm_exec.js"></script>
+    <script>
+      const go = new Go();
+
+      WebAssembly.instantiateStreaming(
+        fetch("simplify.wasm"),
+        go.importObject
+      ).then((result) => {
+        go.run(result.instance);
+      });
+
+      function processFile() {
+        const fileInput = document.getElementById("fileInput");
+        const downloadLink = document.getElementById("downloadLink");
+
+        const file = fileInput.files[0];
+        if (!file) {
+          alert("Please select a GeoJSON file.");
+          return;
+        }
+
+        // Func to add output and zoom
+        function addToMapAndZoom(data) {
+          layerControl.addOverlay(L.geoJSON(data).addTo(map), "Simplified");
+          map.fitBounds(L.geoJSON(data).getBounds());
+          layerControls.expand();
+        }
+
+        // New reader
+        const reader = new FileReader();
+
+        // Process
+        reader.onload = function (e) {
+          // Add input to map
+          let gjs = JSON.parse(
+            String.fromCharCode.apply(null, new Uint8Array(e.target.result))
+          );
+          layerControl.addOverlay(
+            L.geoJSON(gjs, { style: { color: "#ff7800" } }).addTo(map),
+            "Input"
+          );
+
+          const data = new Uint8Array(e.target.result);
+          const result = ProcessGeoJSON(data);
+          if (result.error) {
+            alert(`Error processing GeoJSON: ${result.error}`);
+          } else {
+            // Previous Code
+            const blob = new Blob([result.value], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            downloadLink.href = url;
+            downloadLink.download = "simplified.geojson";
+            downloadLink.style.display = "block";
+
+            // ADD TO MAP
+            fetch(url)
+              .then((response) => response.json())
+              .then((json) => addToMapAndZoom(json));
+          }
+        };
+
+        reader.readAsArrayBuffer(file);
+      }
+    </script>
+  </body>
+</html>
