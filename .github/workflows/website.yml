@@ -30,7 +30,7 @@ jobs:
       - name: Build WASM
         run: GOARCH=wasm GOOS=js go build -o simplify.wasm
       - name: Copy WASM EXEC JS
-        run: echo "${{env.GOROOT}}/misc/wasm" >> $GITHUB_PATH
+        run: cp "${{env.GOROOT}}/misc/wasm/wasm_exec.js" .
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
